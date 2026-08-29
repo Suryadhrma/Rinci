@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Rinci — demo ekstraksi</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    button { padding: 0.5rem 1rem; cursor: pointer; }
+    pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+    #status { margin: 0.5rem 0; color: #555; }
+    #preview { max-width: 100%; margin-top: 1rem; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Rinci — demo ekstraksi (Tahap 0)</h1>
+  <p>Upload struk/nota (JPEG/PNG/WebP), lihat hasil ekstraksi JSON mentah.</p>
+
+  <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
+  <button id="submitBtn">Ekstrak</button>
+
+  <div id="status"></div>
+  <img id="preview" alt="preview" />
+  <pre id="result"></pre>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const previewEl = document.getElementById('preview');
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      previewEl.src = URL.createObjectURL(file);
+      previewEl.style.display = 'block';
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        statusEl.textContent = 'Pilih file dulu.';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      statusEl.textContent = 'Memproses...';
+      resultEl.textContent = '';
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch('/extract', { method: 'POST', body: formData });
+        const body = await res.json();
+
+        if (!res.ok) {
+          statusEl.textContent = `Gagal (HTTP ${res.status})`;
+        } else {
+          statusEl.textContent = 'Selesai.';
+        }
+        resultEl.textContent = JSON.stringify(body, null, 2);
+      } catch (err) {
+        statusEl.textContent = 'Error jaringan.';
+        resultEl.textContent = String(err);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
