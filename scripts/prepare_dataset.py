@@ -46,7 +46,11 @@ def main() -> None:
     print(f"Ambil {args.n} sampel dari split '{args.split}' (offset {args.offset})...")
     rows = fetch_rows(args.split, args.offset, args.n)
 
-    ground_truth = {}
+    gt_path = out_dir / "ground_truth.json"
+    # Gabung ke ground_truth.json yang sudah ada, jangan ditimpa -- biar
+    # script ini bisa dipanggil ulang buat nambah sampel tanpa menghapus
+    # yang sudah diunduh sebelumnya.
+    ground_truth = json.loads(gt_path.read_text(encoding="utf-8")) if gt_path.exists() else {}
     for entry in rows:
         filename = f"{entry['row_idx']:04d}.jpg"
         row = entry["row"]
@@ -58,10 +62,8 @@ def main() -> None:
 
         print(f"  {filename} tersimpan")
 
-    (out_dir / "ground_truth.json").write_text(
-        json.dumps(ground_truth, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    print(f"Selesai. {len(rows)} gambar + ground_truth.json di {out_dir}/")
+    gt_path.write_text(json.dumps(ground_truth, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"Selesai. {len(rows)} gambar baru, {len(ground_truth)} total di ground_truth.json ({out_dir}/)")
 
 
 if __name__ == "__main__":

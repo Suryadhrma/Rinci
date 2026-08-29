@@ -8,8 +8,9 @@
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
+    "test": "vitest run",
+    "eval": "npm run build && tsx eval/run.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
@@ -27,6 +28,7 @@
     "@types/express": "^5.0.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^22.10.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.7.2",
     "vitest": "^4.1.11"
   }
