@@ -4,5 +4,5 @@ dist/
 storage/uploads/
 data/
 *.log
-.claude
+.claude/
 CLAUDE.md
