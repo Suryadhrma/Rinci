@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  HttpCode,
   MaxFileSizeValidator,
   ParseFilePipe,
   Post,
@@ -9,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { ExtractionService } from './extraction.service';
+import { ExtractionQueueService } from './extraction-queue.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { detectImageMimeType } from './file-validation';
 
@@ -18,11 +19,12 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 @Controller()
 export class ExtractionController {
   constructor(
-    private readonly extractionService: ExtractionService,
+    private readonly extractionQueueService: ExtractionQueueService,
     private readonly storage: LocalStorageService,
   ) {}
 
   @Post('extract')
+  @HttpCode(202)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async extract(
     @UploadedFile(
@@ -40,8 +42,12 @@ export class ExtractionController {
       );
     }
 
-    await this.storage.save(file);
+    const saved = await this.storage.save(file);
 
-    return this.extractionService.extract(file.buffer, detectedMimeType);
+    return this.extractionQueueService.enqueue({
+      filename: saved.filename,
+      storagePath: saved.path,
+      mimeType: detectedMimeType,
+    });
   }
 }
