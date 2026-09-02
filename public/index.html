@@ -12,7 +12,7 @@
   </style>
 </head>
 <body>
-  <h1>Rinci — demo ekstraksi (Tahap 0)</h1>
+  <h1>Rinci — demo ekstraksi</h1>
   <p>Upload struk/nota (JPEG/PNG/WebP), lihat hasil ekstraksi JSON mentah.</p>
 
   <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
@@ -36,6 +36,30 @@
       previewEl.style.display = 'block';
     });
 
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_TIMEOUT_MS = 120000;
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function pollJob(jobId) {
+      const deadline = Date.now() + POLL_TIMEOUT_MS;
+
+      while (Date.now() < deadline) {
+        const res = await fetch(`/jobs/${jobId}`);
+        if (!res.ok) throw new Error(`Gagal ambil status job (HTTP ${res.status})`);
+        const job = await res.json();
+
+        if (job.status === 'COMPLETED' || job.status === 'FAILED') return job;
+
+        statusEl.textContent = `Status: ${job.status}...`;
+        await sleep(POLL_INTERVAL_MS);
+      }
+
+      throw new Error('Timeout menunggu hasil job.');
+    }
+
     submitBtn.addEventListener('click', async () => {
       const file = fileInput.files[0];
       if (!file) {
@@ -46,7 +70,7 @@
       const formData = new FormData();
       formData.append('file', file);
 
-      statusEl.textContent = 'Memproses...';
+      statusEl.textContent = 'Mengunggah...';
       resultEl.textContent = '';
       submitBtn.disabled = true;
 
@@ -56,12 +80,17 @@
 
         if (!res.ok) {
           statusEl.textContent = `Gagal (HTTP ${res.status})`;
-        } else {
-          statusEl.textContent = 'Selesai.';
+          resultEl.textContent = JSON.stringify(body, null, 2);
+          return;
         }
-        resultEl.textContent = JSON.stringify(body, null, 2);
+
+        statusEl.textContent = `Diterima, job ${body.jobId}. Menunggu...`;
+        const job = await pollJob(body.jobId);
+
+        statusEl.textContent = job.status === 'COMPLETED' ? 'Selesai.' : 'Gagal diproses.';
+        resultEl.textContent = JSON.stringify(job, null, 2);
       } catch (err) {
-        statusEl.textContent = 'Error jaringan.';
+        statusEl.textContent = 'Error.';
         resultEl.textContent = String(err);
       } finally {
         submitBtn.disabled = false;
