@@ -48,6 +48,9 @@ function sleep(ms: number): Promise<void> {
 interface SampleResult {
   filename: string;
   mismatches: FieldComparison[];
+  modelName?: string;
+  escalated?: boolean;
+  costUsd?: number | null;
   error?: string;
 }
 
@@ -76,7 +79,6 @@ async function main(): Promise<void> {
 
   const allComparisons: FieldComparison[][] = [];
   const perSample: SampleResult[] = [];
-  let modelName: string | undefined;
 
   for (let i = 0; i < filenames.length; i++) {
     const filename = filenames[i];
@@ -88,13 +90,21 @@ async function main(): Promise<void> {
       if (!mimeType) throw new Error('mime type tidak terdeteksi dari isi file');
 
       const result = await extractionService.extract(buffer, mimeType);
-      modelName ??= result.meta.modelName;
       const comparisons = compareExtraction(groundTruth[filename], result.data);
       allComparisons.push(comparisons);
 
       const mismatches = comparisons.filter((c) => !c.match);
-      perSample.push({ filename, mismatches });
-      console.log(`ok (${mismatches.length} mismatch dari ${comparisons.length} field dicek)`);
+      perSample.push({
+        filename,
+        mismatches,
+        modelName: result.meta.modelName,
+        escalated: result.meta.escalated,
+        costUsd: result.meta.costUsd,
+      });
+      console.log(
+        `ok (${mismatches.length} mismatch dari ${comparisons.length} field dicek, model=${result.meta.modelName}` +
+          `${result.meta.escalated ? ', escalated' : ''})`,
+      );
     } catch (err) {
       perSample.push({ filename, mismatches: [], error: String(err) });
       console.log(`GAGAL: ${String(err)}`);
@@ -117,6 +127,24 @@ async function main(): Promise<void> {
   const overallPct = totalCompared ? (totalMatched / totalCompared) * 100 : 0;
   console.log(`\nOVERALL: ${totalMatched}/${totalCompared} (${overallPct.toFixed(1)}%)`);
 
+  // Ringkasan biaya/routing (Tahap 5) -- sampel yang GAGAL tidak punya
+  // costUsd/modelName, cukup dilewat, bukan dianggap $0.
+  const okSamples = perSample.filter((s) => !s.error);
+  const modelCounts: Record<string, number> = {};
+  for (const s of okSamples) {
+    if (s.modelName) modelCounts[s.modelName] = (modelCounts[s.modelName] ?? 0) + 1;
+  }
+  const escalatedCount = okSamples.filter((s) => s.escalated).length;
+  const costs = okSamples.map((s) => s.costUsd).filter((c): c is number => c != null);
+  const totalCostUsd = costs.length ? Number(costs.reduce((a, b) => a + b, 0).toFixed(6)) : null;
+  const avgCostUsdPerDoc = costs.length ? Number((costs.reduce((a, b) => a + b, 0) / costs.length).toFixed(6)) : null;
+
+  console.log('\n=== Biaya & routing model ===');
+  console.log(`  model dipakai: ${JSON.stringify(modelCounts)}`);
+  console.log(`  eskalasi: ${escalatedCount}/${okSamples.length} sampel`);
+  console.log(`  total biaya (tarif berbayar, bukan riil -- free tier): $${totalCostUsd ?? 'n/a'}`);
+  console.log(`  rata-rata biaya/dokumen: $${avgCostUsdPerDoc ?? 'n/a'}`);
+
   const promptHash = createHash('sha256').update(extractionPromptV1).digest('hex').slice(0, 8);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const runDir = join('eval', 'runs');
@@ -128,13 +156,14 @@ async function main(): Promise<void> {
     JSON.stringify(
       {
         timestamp,
-        model: modelName ?? null,
+        models: modelCounts,
         promptVersion: 'v1',
         promptHash,
         split,
         sampleCount: filenames.length,
         fieldAccuracy: tally,
         overall: { matched: totalMatched, total: totalCompared, pct: Number(overallPct.toFixed(1)) },
+        cost: { totalCostUsd, avgCostUsdPerDoc, escalatedCount, sampleCount: okSamples.length },
         perSample,
       },
       null,

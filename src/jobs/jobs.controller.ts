@@ -16,8 +16,18 @@ export class JobsController {
       status: job.status,
       filename: job.filename,
       result: job.result,
+      confidence: job.confidence,
+      needsReview: job.needsReview,
       error: job.error,
       modelName: job.modelName,
+      escalated: job.escalated,
+      repaired: job.repaired,
+      usage: {
+        inputTokens: job.inputTokens,
+        outputTokens: job.outputTokens,
+        costUsd: job.costUsd,
+        durationMs: job.durationMs,
+      },
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     };

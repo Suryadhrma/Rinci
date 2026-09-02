@@ -2,6 +2,8 @@ export interface ExtractionProviderInput {
   imageBuffer: Buffer;
   mimeType: string;
   prompt: string;
+  /** Override model default provider -- dipakai buat eskalasi model (Tahap 5). */
+  model?: string;
 }
 
 export interface ExtractionProviderOutput {

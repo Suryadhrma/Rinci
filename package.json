@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "eval": "npm run build && tsx eval/run.ts",
+    "eval:compare": "tsx eval/compare.ts",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate"
   },

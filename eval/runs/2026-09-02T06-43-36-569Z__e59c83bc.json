@@ -1,0 +1,338 @@
+{
+  "timestamp": "2026-09-02T06-43-36-569Z",
+  "models": {
+    "gemini-3.5-flash-lite": 20
+  },
+  "promptVersion": "v1",
+  "promptHash": "e59c83bc",
+  "split": "test",
+  "sampleCount": 20,
+  "fieldAccuracy": [
+    {
+      "field": "menu[].cnt",
+      "matched": 34,
+      "total": 35
+    },
+    {
+      "field": "menu[].nm",
+      "matched": 36,
+      "total": 41
+    },
+    {
+      "field": "menu[].price",
+      "matched": 36,
+      "total": 39
+    },
+    {
+      "field": "menu[].unitprice",
+      "matched": 3,
+      "total": 8
+    },
+    {
+      "field": "sub_total.service_price",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "sub_total.subtotal_price",
+      "matched": 13,
+      "total": 14
+    },
+    {
+      "field": "sub_total.tax_price",
+      "matched": 8,
+      "total": 8
+    },
+    {
+      "field": "total.cashprice",
+      "matched": 13,
+      "total": 15
+    },
+    {
+      "field": "total.changeprice",
+      "matched": 11,
+      "total": 12
+    },
+    {
+      "field": "total.total_price",
+      "matched": 18,
+      "total": 19
+    }
+  ],
+  "overall": {
+    "matched": 173,
+    "total": 192,
+    "pct": 90.1
+  },
+  "cost": {
+    "totalCostUsd": 0.019171,
+    "avgCostUsdPerDoc": 0.000959,
+    "escalatedCount": 0,
+    "sampleCount": 20
+  },
+  "perSample": [
+    {
+      "filename": "0000.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000829
+    },
+    {
+      "filename": "0001.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000924
+    },
+    {
+      "filename": "0002.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].price",
+          "expected": "24,000",
+          "actual": "24.000",
+          "match": false
+        },
+        {
+          "field": "sub_total.subtotal_price",
+          "expected": "28,000",
+          "actual": "28.000",
+          "match": false
+        },
+        {
+          "field": "total.total_price",
+          "expected": "28,000",
+          "actual": "28.000",
+          "match": false
+        },
+        {
+          "field": "total.cashprice",
+          "expected": "100,000",
+          "actual": "100.000",
+          "match": false
+        },
+        {
+          "field": "total.changeprice",
+          "expected": "72,000",
+          "actual": "72.000",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000949
+    },
+    {
+      "filename": "0003.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].unitprice",
+          "expected": "@11000",
+          "actual": "11000",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000819
+    },
+    {
+      "filename": "0004.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.001059
+    },
+    {
+      "filename": "0005.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000835
+    },
+    {
+      "filename": "0006.jpg",
+      "mismatches": [
+        {
+          "field": "menu[1].nm",
+          "expected": "CHOCO CUS ARD PASTRY",
+          "actual": "CHOCO CUSTARD PASTRY",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000966
+    },
+    {
+      "filename": "0007.jpg",
+      "mismatches": [
+        {
+          "field": "total.cashprice",
+          "expected": "Rp. 111,000",
+          "actual": "Rp.111,000",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000936
+    },
+    {
+      "filename": "0008.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.001011
+    },
+    {
+      "filename": "0009.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].nm",
+          "expected": "Bumbu Kaldu Ayam 1",
+          "actual": "Bumbu Kaldu Ayam",
+          "match": false
+        },
+        {
+          "field": "menu[0].unitprice",
+          "expected": "36000",
+          "actual": null,
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000796
+    },
+    {
+      "filename": "0010.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].cnt",
+          "expected": "1 x",
+          "actual": "1",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000836
+    },
+    {
+      "filename": "0011.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000734
+    },
+    {
+      "filename": "0012.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].nm",
+          "expected": "BLUS WANITA",
+          "actual": "0571-1854 BLUS WANITA",
+          "match": false
+        },
+        {
+          "field": "menu[0].unitprice",
+          "expected": "@120,000",
+          "actual": "120,000",
+          "match": false
+        },
+        {
+          "field": "menu[1].nm",
+          "expected": "SHOPPING BAG",
+          "actual": "1002-0060 SHOPPING BAG",
+          "match": false
+        },
+        {
+          "field": "menu[1].unitprice",
+          "expected": "@880",
+          "actual": "880",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000899
+    },
+    {
+      "filename": "0013.jpg",
+      "mismatches": [
+        {
+          "field": "menu[1].price",
+          "expected": "3,000",
+          "actual": "3.000",
+          "match": false
+        },
+        {
+          "field": "menu[1].unitprice",
+          "expected": "3,000",
+          "actual": "3.000",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000971
+    },
+    {
+      "filename": "0014.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.001417
+    },
+    {
+      "filename": "0015.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000839
+    },
+    {
+      "filename": "0016.jpg",
+      "mismatches": [
+        {
+          "field": "menu[1].nm",
+          "expected": "IVINERAL WATER (bundling) 5k",
+          "actual": "LONGAN",
+          "match": false
+        },
+        {
+          "field": "menu[1].price",
+          "expected": "4,545",
+          "actual": "0",
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.001259
+    },
+    {
+      "filename": "0017.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.001339
+    },
+    {
+      "filename": "0018.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000829
+    },
+    {
+      "filename": "0019.jpg",
+      "mismatches": [],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000924
+    }
+  ]
+}

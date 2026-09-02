@@ -15,14 +15,31 @@ enum JobStatus {
 }
 
 model ExtractionJob {
-  id          String    @id @default(uuid())
-  status      JobStatus @default(QUEUED)
-  filename    String
-  storagePath String
-  mimeType    String
-  result      Json?
-  error       String?
-  modelName   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String    @id @default(uuid())
+  status       JobStatus @default(QUEUED)
+  filename     String
+  storagePath  String
+  mimeType     String
+  // sha256 isi file -- idempotency key: upload dengan isi yang sama
+  // (mis. double-submit) dipetakan ke job yang sama, tidak diproses ulang.
+  contentHash  String
+  result       Json?
+  confidence   Json?
+  needsReview  Boolean   @default(false)
+  error        String?
+  modelName    String?
+  // Biaya & penggunaan model (Tahap 5) -- dijumlah dari semua panggilan
+  // model beneran buat job ini (termasuk repair prompt & eskalasi kalau
+  // kejadian). costUsd tarif berbayar resmi, bukan tagihan riil (project
+  // ini jalan di free tier) -- lihat src/extraction/pricing.ts.
+  inputTokens  Int?
+  outputTokens Int?
+  costUsd      Float?
+  durationMs   Int?
+  escalated    Boolean   @default(false)
+  repaired     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([contentHash])
 }

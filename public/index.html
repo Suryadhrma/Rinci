@@ -84,10 +84,18 @@
           return;
         }
 
-        statusEl.textContent = `Diterima, job ${body.jobId}. Menunggu...`;
+        statusEl.textContent = body.deduped
+          ? `File sama pernah diupload (job ${body.jobId}), pakai hasil itu. Menunggu...`
+          : `Diterima, job ${body.jobId}. Menunggu...`;
         const job = await pollJob(body.jobId);
 
-        statusEl.textContent = job.status === 'COMPLETED' ? 'Selesai.' : 'Gagal diproses.';
+        if (job.status === 'COMPLETED') {
+          statusEl.textContent = job.needsReview
+            ? 'Selesai -- confidence rendah di beberapa field, perlu ditinjau manual.'
+            : 'Selesai.';
+        } else {
+          statusEl.textContent = 'Gagal diproses.';
+        }
         resultEl.textContent = JSON.stringify(job, null, 2);
       } catch (err) {
         statusEl.textContent = 'Error.';

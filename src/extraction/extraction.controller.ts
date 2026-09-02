@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { createHash } from 'node:crypto';
 import { ExtractionQueueService } from './extraction-queue.service';
 import { LocalStorageService } from '../storage/local-storage.service';
 import { detectImageMimeType } from './file-validation';
@@ -43,11 +44,13 @@ export class ExtractionController {
     }
 
     const saved = await this.storage.save(file);
+    const contentHash = createHash('sha256').update(file.buffer).digest('hex');
 
     return this.extractionQueueService.enqueue({
       filename: saved.filename,
       storagePath: saved.path,
       mimeType: detectedMimeType,
+      contentHash,
     });
   }
 }

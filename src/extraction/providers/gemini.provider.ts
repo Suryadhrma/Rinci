@@ -36,7 +36,7 @@ export class GeminiExtractionProvider implements ExtractionProvider {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       try {
         const response = await this.callWithTimeout(input);
-        return this.toProviderOutput(response, Date.now() - startedAt);
+        return this.toProviderOutput(response, Date.now() - startedAt, input.model ?? this.model);
       } catch (error) {
         lastError = error;
 
@@ -61,7 +61,7 @@ export class GeminiExtractionProvider implements ExtractionProvider {
 
     try {
       return await this.client.models.generateContent({
-        model: this.model,
+        model: input.model ?? this.model,
         contents: [
           {
             role: 'user',
@@ -89,6 +89,7 @@ export class GeminiExtractionProvider implements ExtractionProvider {
   private toProviderOutput(
     response: Awaited<ReturnType<GoogleGenAI['models']['generateContent']>>,
     durationMs: number,
+    modelName: string,
   ): ExtractionProviderOutput {
     const text = response.text;
     if (!text) {
@@ -104,7 +105,7 @@ export class GeminiExtractionProvider implements ExtractionProvider {
 
     return {
       raw,
-      modelName: this.model,
+      modelName,
       inputTokens: response.usageMetadata?.promptTokenCount ?? 0,
       outputTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
       durationMs,

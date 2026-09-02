@@ -6,6 +6,20 @@ export interface CreateJobInput {
   filename: string;
   storagePath: string;
   mimeType: string;
+  contentHash: string;
+}
+
+export interface MarkCompletedInput {
+  result: Prisma.InputJsonValue;
+  modelName: string;
+  confidence: Prisma.InputJsonValue;
+  needsReview: boolean;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number | null;
+  durationMs: number;
+  escalated: boolean;
+  repaired: boolean;
 }
 
 @Injectable()
@@ -18,7 +32,20 @@ export class JobsService {
         filename: input.filename,
         storagePath: input.storagePath,
         mimeType: input.mimeType,
+        contentHash: input.contentHash,
       },
+    });
+  }
+
+  // Idempotency: job lama dengan isi file sama yang masih relevan (belum
+  // gagal total) dipakai ulang, bukan diproses dari nol lagi.
+  findActiveByHash(contentHash: string): Promise<ExtractionJob | null> {
+    return this.prisma.extractionJob.findFirst({
+      where: {
+        contentHash,
+        status: { in: [JobStatus.QUEUED, JobStatus.PROCESSING, JobStatus.COMPLETED] },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
@@ -37,14 +64,10 @@ export class JobsService {
     });
   }
 
-  markCompleted(
-    id: string,
-    result: Prisma.InputJsonValue,
-    modelName: string,
-  ): Promise<ExtractionJob> {
+  markCompleted(id: string, input: MarkCompletedInput): Promise<ExtractionJob> {
     return this.prisma.extractionJob.update({
       where: { id },
-      data: { status: JobStatus.COMPLETED, result, modelName },
+      data: { status: JobStatus.COMPLETED, ...input },
     });
   }
 

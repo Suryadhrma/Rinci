@@ -19,8 +19,19 @@ import IORedis from 'ioredis';
     BullModule.registerQueue({
       name: 'extraction',
       defaultJobOptions: {
-        attempts: 2,
+        // Retry level job (di atas retry transient di GeminiExtractionProvider
+        // sendiri) -- exponential backoff: nyoba lagi kalau seluruh proses
+        // (baca file, panggil model, validasi skema) gagal, jeda makin lama
+        // tiap percobaan (5s, 10s, 20s) biar tidak langsung nge-hammer ulang
+        // saat provider/API lagi bermasalah.
+        attempts: 3,
         backoff: { type: 'exponential', delay: 5000 },
+        // Job yang gagal total (habis semua attempts) SENGAJA tidak
+        // otomatis dibuang -- itu jadi dead-letter queue-nya, bisa
+        // diperiksa lewat GET /jobs/dead-letter. Dibatasi 200 biar Redis
+        // (tier gratis) tidak membengkak tanpa batas.
+        removeOnFail: { count: 200 },
+        removeOnComplete: { count: 100 },
       },
     }),
   ],
