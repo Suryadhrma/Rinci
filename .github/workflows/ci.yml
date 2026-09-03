@@ -19,12 +19,30 @@ jobs:
       - run: npm run build
       - run: npm test
 
+  # `secrets` TIDAK BISA dipakai langsung di job-level `if:` (GitHub
+  # Actions nolak seluruh workflow file kalau dicoba -- "Unrecognized
+  # named-value: 'secrets'", ditemukan pas semua run CI gagal instan
+  # tanpa job sama sekali). Job kecil ini yang cek via step (step BOLEH
+  # akses secrets), job `eval` baca hasilnya lewat `needs.*.outputs`.
+  check-secret:
+    runs-on: ubuntu-latest
+    outputs:
+      has-key: ${{ steps.check.outputs.has-key }}
+    steps:
+      - id: check
+        run: |
+          if [ -n "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "has-key=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-key=false" >> "$GITHUB_OUTPUT"
+          fi
+
   eval:
     runs-on: ubuntu-latest
-    needs: build-and-test
+    needs: [build-and-test, check-secret]
     # Fork PR tidak punya akses secrets (GEMINI_API_KEY kosong di sana) --
     # skip daripada gagal merah buat sesuatu yang memang tidak bisa jalan.
-    if: ${{ secrets.GEMINI_API_KEY != '' }}
+    if: needs.check-secret.outputs.has-key == 'true'
     services:
       postgres:
         image: postgres:16
