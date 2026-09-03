@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Query, Res } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -7,6 +8,7 @@ import { JobsService } from './jobs.service';
 import { ReviewDatasetService } from './review-dataset.service';
 import { receiptSchemaV1 } from '../extraction/schema/schema.v1';
 
+@ApiTags('jobs')
 @Controller('jobs')
 export class JobsController {
   constructor(
@@ -15,6 +17,9 @@ export class JobsController {
   ) {}
 
   @Get()
+  @ApiOperation({ summary: 'Daftar job (buat review queue)' })
+  @ApiQuery({ name: 'needsReview', required: false, type: Boolean })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   async findAll(@Query('needsReview') needsReview?: string, @Query('limit') limit?: string) {
     const jobs = await this.jobsService.list({
       needsReview: needsReview === undefined ? undefined : needsReview === 'true',
@@ -37,6 +42,8 @@ export class JobsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Detail job: status, hasil, confidence, biaya' })
+  @ApiParam({ name: 'id' })
   async findOne(@Param('id') id: string) {
     const job = await this.jobsService.findById(id);
 
@@ -67,6 +74,8 @@ export class JobsController {
   }
 
   @Get(':id/image')
+  @ApiOperation({ summary: 'Stream dokumen asli yang diupload buat job ini' })
+  @ApiParam({ name: 'id' })
   async getImage(@Param('id') id: string, @Res() res: Response): Promise<void> {
     const job = await this.jobsService.findById(id);
 
@@ -82,6 +91,9 @@ export class JobsController {
   }
 
   @Post(':id/correction')
+  @ApiOperation({ summary: 'Simpan koreksi manusia; otomatis jadi sampel eval baru (split "corrections")' })
+  @ApiParam({ name: 'id' })
+  @ApiResponse({ status: 400, description: 'Body tidak sesuai skema ReceiptV1' })
   async submitCorrection(@Param('id') id: string, @Body() body: unknown) {
     const parsed = receiptSchemaV1.safeParse(body);
     if (!parsed.success) {

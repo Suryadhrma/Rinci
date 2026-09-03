@@ -9,6 +9,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { memoryStorage } from 'multer';
 import { createHash } from 'node:crypto';
 import { ExtractionQueueService } from './extraction-queue.service';
@@ -17,6 +19,7 @@ import { detectImageMimeType } from './file-validation';
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
+@ApiTags('extraction')
 @Controller()
 export class ExtractionController {
   constructor(
@@ -27,6 +30,21 @@ export class ExtractionController {
   @Post('extract')
   @HttpCode(202)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  // Endpoint ini yang manggil API berbayar (Gemini) -- dibatasi lebih
+  // ketat dari default global (5/menit per IP), biar satu klien tidak
+  // bisa menghabiskan kuota/biaya sendirian.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Upload struk/nota, antre buat diekstrak' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiResponse({ status: 202, description: 'Job diterima, dikembalikan jobId buat polling GET /jobs/:id' })
+  @ApiResponse({ status: 400, description: 'File bukan gambar JPEG/PNG/WebP yang valid' })
+  @ApiResponse({ status: 429, description: 'Terlalu banyak request, coba lagi nanti' })
   async extract(
     @UploadedFile(
       new ParseFilePipe({

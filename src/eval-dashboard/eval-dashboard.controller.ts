@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -7,9 +8,11 @@ const RUNS_DIR = join('eval', 'runs');
 // Dashboard eval (Tahap 6) -- baca langsung file JSON yang ditulis
 // eval/run.ts, tidak ada penyimpanan terpisah. Hasil eval memang cuma
 // dipakai lokal/CI, belum ada kebutuhan nyata buat masuk Postgres.
+@ApiTags('eval')
 @Controller('eval')
 export class EvalDashboardController {
   @Get('runs')
+  @ApiOperation({ summary: 'Daftar hasil npm run eval tersimpan (buat dashboard)' })
   async findAll() {
     let files: string[];
     try {
