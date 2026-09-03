@@ -20,6 +20,28 @@ describe('parseIndonesianNumber', () => {
   it('balikin null buat string yang bukan angka', () => {
     expect(parseIndonesianNumber('abc')).toBeNull();
   });
+
+  it('parses "," sebagai pemisah ribuan gaya Inggris (bukan cuma desimal)', () => {
+    // Kasus nyata yang ditemukan pas testing manual: struk yang nulis
+    // "100,909" (seratus ribu sembilan ratus sembilan), bukan 100.909.
+    expect(parseIndonesianNumber('100,909')).toBe(100909);
+    expect(parseIndonesianNumber('111,000')).toBe(111000);
+  });
+
+  it('buang simbol mata uang yang menyatu di angka', () => {
+    expect(parseIndonesianNumber('Rp.111,000')).toBe(111000);
+    expect(parseIndonesianNumber('Rp10.000')).toBe(10000);
+  });
+
+  it('kelompok 3 digit setelah pemisah dianggap ribuan, bukan desimal -- di format manapun', () => {
+    expect(parseIndonesianNumber('10.091')).toBe(10091);
+    expect(parseIndonesianNumber('10,091')).toBe(10091);
+  });
+
+  it('kelompok 1-2 digit setelah pemisah tetap dianggap desimal', () => {
+    expect(parseIndonesianNumber('10,5')).toBe(10.5);
+    expect(parseIndonesianNumber('10.50')).toBe(10.5);
+  });
 });
 
 function receipt(overrides: Partial<ReceiptV1> = {}): ReceiptV1 {

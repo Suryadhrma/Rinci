@@ -26,15 +26,37 @@ export interface ConfidenceResult {
   needsReview: boolean;
 }
 
-// Format angka Indonesia: "." pemisah ribuan, "," desimal (lihat CLAUDE.md
-// bagian skema ekstraksi). "10.000" -> 10000, "10.000,50" -> 10000.5.
+// Struk yang dites tidak selalu konsisten format angkanya -- kebanyakan
+// Indonesia ("." ribuan, "," desimal, lihat CLAUDE.md bagian skema
+// ekstraksi), tapi ada juga yang gaya Inggris ("," ribuan, "." desimal)
+// atau ada simbol mata uang menyatu (mis. "Rp.111,000" -- prompts/v1.ts
+// sengaja suruh model pertahankan simbolnya apa adanya, bukan dibersihkan
+// di sana). Ditemukan lewat testing manual: parser versi lama yang cuma
+// asumsi format Indonesia salah baca "100,909" jadi 100.909 (harusnya
+// 100909), bikin validasi aritmetika "cocok" padahal nilainya salah 1000x.
+//
+// Heuristik di sini: buang simbol non-angka dulu, lalu anggap titik/koma
+// TERAKHIR sebagai desimal HANYA kalau diikuti 1-2 digit -- nominal
+// rupiah di struk praktiknya bulat, jadi kelompok 3 digit setelah
+// pemisah (apapun karakternya) hampir pasti pemisah ribuan, bukan desimal.
 export function parseIndonesianNumber(raw: string | null | undefined): number | null {
   if (raw == null) return null;
-  const trimmed = raw.trim();
-  if (trimmed === '') return null;
 
-  const normalized = trimmed.replace(/\./g, '').replace(',', '.');
-  const num = Number(normalized);
+  const cleaned = raw.replace(/[^0-9.,-]/g, '');
+  if (cleaned === '') return null;
+
+  const negative = cleaned.startsWith('-');
+  const unsigned = negative ? cleaned.slice(1) : cleaned;
+  if (unsigned === '') return null;
+
+  const decimalMatch = unsigned.match(/[.,](\d{1,2})$/);
+  const integerPart = decimalMatch ? unsigned.slice(0, -decimalMatch[0].length) : unsigned;
+  const decimalPart = decimalMatch ? decimalMatch[1] : '';
+
+  const digits = integerPart.replace(/[.,]/g, '');
+  if (!/^\d+$/.test(digits)) return null;
+
+  const num = Number(`${negative ? '-' : ''}${digits}${decimalPart ? '.' + decimalPart : ''}`);
   return Number.isFinite(num) ? num : null;
 }
 
