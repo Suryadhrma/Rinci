@@ -3,39 +3,49 @@
 <head>
   <meta charset="utf-8" />
   <title>Rinci — review queue</title>
+  <link rel="stylesheet" href="/styles.css" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-    nav { margin-bottom: 1.5rem; }
-    nav a { margin-right: 1rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
-    th { color: #555; font-weight: 600; }
-    .high { color: #1a7f37; }
-    .mid { color: #9a6700; }
-    .low { color: #cf222e; font-weight: 600; }
-    .empty { color: #888; padding: 1rem 0; }
-    label { display: inline-flex; align-items: center; gap: 0.4rem; }
+    .toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; }
+    .toolbar label { display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; }
+    td.link a { color: var(--color-primary); text-decoration: none; font-weight: 600; }
+    td.link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
-  <h1>Review queue</h1>
-  <label><input type="checkbox" id="onlyNeedsReview" checked /> Cuma tampilkan yang perlu direview</label>
+  <nav class="topnav">
+    <a class="topnav__brand" href="/index.html">Rinci</a>
+    <div class="topnav__links">
+      <a href="/index.html">Upload</a>
+      <a href="/review.html" class="active">Review queue</a>
+      <a href="/dashboard.html">Dashboard eval</a>
+    </div>
+  </nav>
 
-  <table>
-    <thead>
-      <tr><th>File</th><th>Status</th><th>Confidence</th><th>Model</th><th>Biaya</th><th>Dibuat</th><th></th></tr>
-    </thead>
-    <tbody id="jobsBody"></tbody>
-  </table>
-  <p id="emptyMsg" class="empty" style="display:none">Tidak ada job.</p>
+  <div class="page">
+    <h1>Review queue</h1>
+    <p class="page-lede">Job yang confidence-nya rendah dan perlu ditinjau manual.</p>
+
+    <div class="toolbar">
+      <label><input type="checkbox" id="onlyNeedsReview" checked /> Cuma tampilkan yang perlu direview</label>
+    </div>
+
+    <div class="card" style="padding: 0.5rem 1.25rem;">
+      <table>
+        <thead>
+          <tr><th>File</th><th>Status</th><th>Confidence</th><th>Model</th><th>Biaya</th><th>Dibuat</th><th></th></tr>
+        </thead>
+        <tbody id="jobsBody"></tbody>
+      </table>
+    </div>
+    <p id="emptyMsg" class="empty-state" style="display:none">Tidak ada job.</p>
+  </div>
 
   <script>
     function confidenceClass(score) {
       if (score == null) return '';
-      if (score < 0.6) return 'low';
-      if (score < 0.85) return 'mid';
-      return 'high';
+      if (score < 0.6) return 'conf-low';
+      if (score < 0.85) return 'conf-mid';
+      return 'conf-high';
     }
 
     async function loadJobs() {
@@ -61,7 +71,7 @@
           <td>${job.modelName ?? '-'}</td>
           <td>${cost}</td>
           <td>${new Date(job.createdAt).toLocaleString('id-ID')}</td>
-          <td><a href="/job.html?id=${job.id}">Buka</a></td>
+          <td class="link"><a href="/job.html?id=${job.id}">Buka</a></td>
         `;
         tbody.appendChild(tr);
       }

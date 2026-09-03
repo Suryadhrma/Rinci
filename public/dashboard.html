@@ -3,36 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <title>Rinci — dashboard eval</title>
+  <link rel="stylesheet" href="/styles.css" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-    nav { margin-bottom: 1.5rem; }
-    nav a { margin-right: 1rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; vertical-align: top; }
-    th { color: #555; font-weight: 600; }
-    .bar-track { background: #eee; border-radius: 3px; height: 10px; width: 100px; overflow: hidden; }
-    .bar-fill { background: #1a7f37; height: 100%; }
-    .run-row { cursor: pointer; }
-    .run-row:hover { background: #fafafa; }
-    .detail { display: none; background: #f9f9f9; }
+    .bar-track { background: var(--color-border); border-radius: 3px; height: 8px; width: 110px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 0.5rem; }
+    .bar-fill { background: var(--color-success); height: 100%; }
+    .run-row { cursor: pointer; transition: background 0.1s ease; }
+    .run-row:hover { background: var(--color-surface-muted); }
+    .detail { display: none; background: var(--color-surface-muted); }
     .detail.open { display: table-row; }
+    .detail > td { padding: 1rem 1.25rem; }
     .field-table { margin: 0; }
-    .field-table th, .field-table td { padding: 0.25rem 0.5rem; border: none; font-size: 0.85rem; }
-    .empty { color: #888; }
+    .field-table th, .field-table td { padding: 0.3rem 0.6rem; border: none; font-size: 0.82rem; }
   </style>
 </head>
 <body>
-  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
-  <h1>Dashboard eval</h1>
-  <p class="empty">Baca langsung dari <code>eval/runs/*.json</code> -- klik satu run buat lihat akurasi per field.</p>
+  <nav class="topnav">
+    <a class="topnav__brand" href="/index.html">Rinci</a>
+    <div class="topnav__links">
+      <a href="/index.html">Upload</a>
+      <a href="/review.html">Review queue</a>
+      <a href="/dashboard.html" class="active">Dashboard eval</a>
+    </div>
+  </nav>
 
-  <table>
-    <thead>
-      <tr><th>Waktu</th><th>Split</th><th>N</th><th>Model</th><th>Akurasi</th><th>Biaya/dok</th></tr>
-    </thead>
-    <tbody id="runsBody"></tbody>
-  </table>
-  <p id="emptyMsg" class="empty" style="display:none">Belum ada hasil eval. Jalankan <code>npm run eval</code>.</p>
+  <div class="page">
+    <h1>Dashboard eval</h1>
+    <p class="page-lede">Baca langsung dari <code>eval/runs/*.json</code> — klik satu run buat lihat akurasi per field.</p>
+
+    <div class="card" style="padding: 0.5rem 1.25rem;">
+      <table>
+        <thead>
+          <tr><th>Waktu</th><th>Split</th><th>N</th><th>Model</th><th>Akurasi</th><th>Biaya/dok</th></tr>
+        </thead>
+        <tbody id="runsBody"></tbody>
+      </table>
+    </div>
+    <p id="emptyMsg" class="empty-state" style="display:none">Belum ada hasil eval. Jalankan <code>npm run eval</code>.</p>
+  </div>
 
   <script>
     function esc(v) {
@@ -40,7 +47,7 @@
     }
 
     function renderFieldTable(fieldAccuracy) {
-      if (!fieldAccuracy?.length) return '<p class="empty">Tidak ada rincian per field.</p>';
+      if (!fieldAccuracy?.length) return '<p class="empty-state">Tidak ada rincian per field.</p>';
       const rows = fieldAccuracy
         .map((f) => {
           const pct = f.total ? ((f.matched / f.total) * 100).toFixed(1) : '0.0';
@@ -76,7 +83,7 @@
           <td>${esc(modelLabel)}</td>
           <td>
             ${pct.toFixed(1)}%
-            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+            <span class="bar-track"><span class="bar-fill" style="width:${pct}%"></span></span>
           </td>
           <td>${costLabel}</td>
         `;

@@ -146,10 +146,15 @@ async function main(): Promise<void> {
   console.log(`  rata-rata biaya/dokumen: $${avgCostUsdPerDoc ?? 'n/a'}`);
 
   const promptHash = createHash('sha256').update(extractionPromptV1).digest('hex').slice(0, 8);
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  // Nama file harus filesystem-safe (Windows tidak izinkan ":" di nama
+  // file) -- tapi field "timestamp" DI DALAM JSON tetap ISO 8601 asli,
+  // biar `new Date(run.timestamp)` di dashboard.html bisa nge-parse
+  // (versi filesystem-safe bikin "Invalid Date", ditemukan pas testing).
+  const timestamp = new Date().toISOString();
+  const timestampSafe = timestamp.replace(/[:.]/g, '-');
   const runDir = join('eval', 'runs');
   mkdirSync(runDir, { recursive: true });
-  const runPath = join(runDir, `${timestamp}__${promptHash}.json`);
+  const runPath = join(runDir, `${timestampSafe}__${promptHash}.json`);
 
   writeFileSync(
     runPath,

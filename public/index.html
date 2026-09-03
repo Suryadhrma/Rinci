@@ -3,33 +3,205 @@
 <head>
   <meta charset="utf-8" />
   <title>Rinci — demo ekstraksi</title>
+  <link rel="stylesheet" href="/styles.css" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-    button { padding: 0.5rem 1rem; cursor: pointer; }
-    pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
-    #status { margin: 0.5rem 0; color: #555; }
-    #preview { max-width: 100%; margin-top: 1rem; display: none; }
-    nav { margin-bottom: 1.5rem; }
-    nav a { margin-right: 1rem; }
+    /* --- Hero (3D), cuma di halaman ini -- tool pages lain sengaja tetap bersih --- */
+    .hero {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 1rem;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; padding-top: 1.5rem; text-align: center; }
+      .hero-visual { margin: 0 auto; }
+    }
+
+    .hero-copy .eyebrow {
+      text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;
+      color: var(--color-primary); font-weight: 700; margin-bottom: 0.6rem;
+    }
+    .hero-copy h1 { font-size: 2.5rem; line-height: 1.1; margin-bottom: 0.9rem; }
+    .hero-copy .lede { font-size: 1.05rem; color: var(--color-text-muted); max-width: 38ch; margin-bottom: 0; }
+    @media (max-width: 820px) { .hero-copy .lede { margin-left: auto; margin-right: auto; } }
+
+    .hero-visual { position: relative; height: 340px; perspective: 1400px; }
+
+    /* Opacity default 1 (KELIHATAN) -- animasi JS cuma enhancement, bukan
+       syarat konten kelihatan. Kalau anime.js gagal load/gagal jalan
+       (CDN diblokir, prefers-reduced-motion, dsb), halaman tetap utuh. */
+    .receipt-3d {
+      position: absolute; top: 50%; left: 50%; width: 210px;
+      background: #fff; border-radius: 12px; padding: 20px 18px 24px;
+      box-shadow: 0 30px 60px -15px rgba(30, 20, 80, 0.35), 0 10px 20px rgba(30, 20, 80, 0.12);
+      transform-style: preserve-3d;
+      transform: translateX(-50%) translateY(-50%) rotateY(-18deg) rotateX(8deg) rotateZ(-4deg) scale(1);
+      opacity: 1;
+    }
+    .receipt-3d .rline { height: 7px; border-radius: 3px; background: var(--color-border); margin-bottom: 10px; }
+    .receipt-3d .rline.w40 { width: 40%; }
+    .receipt-3d .rline.w70 { width: 70%; }
+    .receipt-3d .rline.w55 { width: 55%; }
+    .receipt-3d .rline.w80 { width: 80%; }
+    .receipt-3d .rline.w30 { width: 30%; }
+    .receipt-3d .rdivider { border-top: 1.5px dashed var(--color-border); margin: 12px 0; }
+    .receipt-3d .rline.accent { background: var(--color-primary-soft); position: relative; overflow: hidden; }
+
+    /* CSS-only (bukan JS) SENGAJA -- garis awal & akhir animasi keduanya
+       sudah kelihatan wajar (redup di 0%/100%, jelas di tengah), jadi
+       kalaupun animasinya tidak pernah jalan (reduced-motion browser
+       lama, dsb) tetap tidak ada state "rusak" yang nyangkut. */
+    .receipt-3d .scan {
+      position: absolute; left: 6px; right: 6px; height: 3px; top: 0;
+      background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+      animation: scanSweep 3.5s ease-in-out infinite;
+    }
+    @keyframes scanSweep {
+      0%, 100% { transform: translateY(0); opacity: 0; }
+      15% { opacity: 0.9; }
+      50% { transform: translateY(120px); opacity: 0.9; }
+      85% { opacity: 0.9; }
+    }
+
+    .data-chip {
+      position: absolute; background: #fff; border: 1px solid var(--color-border);
+      border-radius: 10px; box-shadow: var(--shadow-md); padding: 7px 12px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+      transform-style: preserve-3d;
+      animation: chipFloat 3s ease-in-out infinite;
+    }
+    @keyframes chipFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    .data-chip .k { color: var(--color-text-faint); font-weight: 500; margin-right: 4px; }
+    .chip-1 { top: 10%; right: 2%; color: var(--color-success); animation-delay: 0s; }
+    .chip-2 { bottom: 26%; right: -2%; color: var(--color-primary); animation-delay: 0.5s; }
+    .chip-3 { bottom: 6%; left: 0%; color: var(--color-text); animation-delay: 1s; }
+    @media (prefers-reduced-motion: reduce) {
+      .receipt-3d .scan, .data-chip { animation: none; }
+    }
+    @media (max-width: 820px) { .chip-1, .chip-2, .chip-3 { right: 8%; left: 8%; } }
+
+    /* --- Upload tool, sengaja bersih (bukan bagian hero) --- */
+    #status { margin: 0.5rem 0; color: var(--color-text-muted); font-size: 0.9rem; }
+    #preview { max-width: 100%; margin-top: 1rem; display: none; border-radius: var(--radius-sm); }
+    pre { background: var(--color-surface-muted); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; font-size: 0.85rem; }
+    .upload-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0; }
+    .samples-note { font-size: 0.85rem; color: var(--color-text-muted); }
+    .samples-note a { color: var(--color-primary); }
   </style>
 </head>
 <body>
-  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
-  <h1>Rinci — demo ekstraksi</h1>
-  <p>Upload struk/nota (JPEG/PNG/WebP), lihat hasil ekstraksi JSON mentah.</p>
-  <p>Tidak punya struk buat dicoba? Unduh salah satu contoh:
-    <a href="/samples/sample-1.jpg" download>sample-1.jpg</a>,
-    <a href="/samples/sample-2.jpg" download>sample-2.jpg</a>,
-    <a href="/samples/sample-3.jpg" download>sample-3.jpg</a>
-    (dari dataset CORD-v2, CC BY 4.0).
-  </p>
+  <nav class="topnav">
+    <a class="topnav__brand" href="/index.html">Rinci</a>
+    <div class="topnav__links">
+      <a href="/index.html" class="active">Upload</a>
+      <a href="/review.html">Review queue</a>
+      <a href="/dashboard.html">Dashboard eval</a>
+    </div>
+  </nav>
 
-  <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
-  <button id="submitBtn">Ekstrak</button>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="eyebrow">Ekstraksi dokumen bisnis</div>
+      <h1>Struk berantakan masuk, data rapi keluar.</h1>
+      <p class="lede">Upload foto struk/nota — miring, buram, hasil scan HP — Rinci baca isinya, validasi, dan kasih tahu field mana yang perlu dicek manual.</p>
+    </div>
+    <div class="hero-visual" id="heroVisual">
+      <div class="receipt-3d" id="receiptCard">
+        <div class="rline w70"></div>
+        <div class="rline w40"></div>
+        <div class="rdivider"></div>
+        <div class="rline w80"></div>
+        <div class="rline w55"></div>
+        <div class="rline w30"></div>
+        <div class="rdivider"></div>
+        <div class="rline w70 accent"></div>
+        <div class="scan"></div>
+      </div>
+      <div class="data-chip chip-1"><span class="k">Total</span>Rp 111.000</div>
+      <div class="data-chip chip-2"><span class="k">Confidence</span>93%</div>
+      <div class="data-chip chip-3">{ "menu": [...] }</div>
+    </div>
+  </section>
 
-  <div id="status"></div>
-  <img id="preview" alt="preview" />
-  <pre id="result"></pre>
+  <div class="page page--narrow">
+    <div class="card">
+      <h3>Coba sekarang</h3>
+      <p class="samples-note" style="margin-top:-0.4rem;">
+        Tidak punya struk? Unduh contoh:
+        <a href="/samples/sample-1.jpg" download>sample-1</a>,
+        <a href="/samples/sample-2.jpg" download>sample-2</a>,
+        <a href="/samples/sample-3.jpg" download>sample-3</a>
+        (dataset CORD-v2, CC BY 4.0).
+      </p>
+
+      <div class="upload-row">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
+        <button id="submitBtn">Ekstrak</button>
+      </div>
+
+      <div id="status"></div>
+      <img id="preview" alt="preview" />
+      <pre id="result"></pre>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js" defer></script>
+  <script defer>
+    window.addEventListener('DOMContentLoaded', () => {
+      // Konten (kartu + chip) sudah kelihatan lengkap & benar lewat CSS
+      // statis SEBELUM baris ini jalan sama sekali -- idle float & scan
+      // line juga CSS-only (@keyframes), bukan JS. Sengaja tidak ada
+      // animasi "masuk dari tidak-kelihatan" yang gate content di balik
+      // JS: anime.js nulis inline style "from" SECARA SINKRON begitu
+      // animasi dimulai, jadi kalau frame berikutnya tidak pernah jalan
+      // (tab background/reduced-motion/dsb), elemen nyangkut permanen
+      // di state awal yang tidak kelihatan -- ditemukan pas testing.
+      // Satu-satunya JS di sini murni bonus interaktif (tilt ikutin
+      // mouse), aman karena cuma jalan kalau tab beneran fokus/kelihatan.
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (typeof anime === 'undefined' || reduceMotion) return;
+
+      const receipt = '#receiptCard';
+      const visual = document.getElementById('heroVisual');
+
+      visual.addEventListener('mousemove', (e) => {
+        const rect = visual.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        anime({
+          targets: receipt,
+          translateX: '-50%',
+          translateY: '-50%',
+          rotateY: -18 + x * 22,
+          rotateX: 8 - y * 22,
+          rotateZ: -4,
+          scale: 1,
+          duration: 350,
+          easing: 'easeOutQuad',
+        });
+      });
+
+      visual.addEventListener('mouseleave', () => {
+        anime({
+          targets: receipt,
+          translateX: '-50%',
+          translateY: '-50%',
+          rotateY: -18,
+          rotateX: 8,
+          rotateZ: -4,
+          scale: 1,
+          duration: 700,
+          easing: 'easeOutElastic(1, .6)',
+        });
+      });
+    });
+  </script>
 
   <script>
     const fileInput = document.getElementById('fileInput');

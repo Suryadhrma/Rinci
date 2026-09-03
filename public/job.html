@@ -3,85 +3,86 @@
 <head>
   <meta charset="utf-8" />
   <title>Rinci — detail job</title>
+  <link rel="stylesheet" href="/styles.css" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-    nav { margin-bottom: 1.5rem; }
-    nav a { margin-right: 1rem; }
     .columns { display: flex; gap: 2rem; align-items: flex-start; }
     .col { flex: 1; min-width: 0; }
-    .col img { max-width: 100%; border: 1px solid #ddd; }
-    .meta { color: #555; font-size: 0.9rem; margin: 0.5rem 0 1.5rem; }
-    .banner { padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
-    .banner.review { background: #fff3cd; color: #664d03; }
-    .banner.reviewed { background: #d1e7dd; color: #0f5132; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-    th, td { padding: 0.4rem; text-align: left; }
-    th { color: #555; font-weight: 600; font-size: 0.85rem; }
-    input { width: 100%; box-sizing: border-box; padding: 0.3rem; border: 1px solid #ccc; border-radius: 3px; }
-    input.high { border-color: #1a7f37; }
-    input.mid { border-color: #9a6700; background: #fffbea; }
-    input.low { border-color: #cf222e; background: #fff0f0; }
-    .legend { font-size: 0.8rem; color: #555; margin-bottom: 1rem; }
-    .legend span { margin-right: 1rem; }
-    fieldset { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 1rem; padding: 0.75rem 1rem; }
-    legend { font-weight: 600; padding: 0 0.4rem; }
-    button { padding: 0.5rem 1rem; cursor: pointer; }
-    #status { margin-top: 1rem; color: #555; }
+    .col img { max-width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+    .meta { color: var(--color-text-muted); font-size: 0.85rem; margin: -0.5rem 0 1.5rem; }
+    .legend { font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 1rem; display: flex; gap: 1.25rem; }
+    .legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.35rem; }
+    .dot.conf-high { background: var(--color-success); }
+    .dot.conf-mid { background: var(--color-warning); }
+    .dot.conf-low { background: var(--color-danger); }
+    fieldset { border: 1px solid var(--color-border); border-radius: var(--radius-md); margin-bottom: 1.25rem; padding: 1rem 1.25rem; }
+    legend { font-weight: 600; padding: 0 0.4rem; font-size: 0.85rem; }
+    table td { padding: 0.35rem 0.4rem; }
+    #status { margin-top: 1rem; color: var(--color-text-muted); font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
-  <h1>Detail job</h1>
-  <div id="banner"></div>
-  <div class="meta" id="meta"></div>
-
-  <div class="columns">
-    <div class="col">
-      <h3>Dokumen asli</h3>
-      <img id="preview" alt="dokumen" />
+  <nav class="topnav">
+    <a class="topnav__brand" href="/index.html">Rinci</a>
+    <div class="topnav__links">
+      <a href="/index.html">Upload</a>
+      <a href="/review.html">Review queue</a>
+      <a href="/dashboard.html">Dashboard eval</a>
     </div>
-    <div class="col">
-      <h3>Hasil ekstraksi</h3>
-      <p class="legend">
-        <span style="color:#1a7f37">■ confidence tinggi</span>
-        <span style="color:#9a6700">■ sedang</span>
-        <span style="color:#cf222e">■ rendah -- cek manual</span>
-      </p>
-      <form id="correctionForm">
-        <fieldset>
-          <legend>Menu</legend>
-          <table>
-            <thead><tr><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Harga satuan</th><th></th></tr></thead>
-            <tbody id="menuBody"></tbody>
-          </table>
-          <button type="button" id="addItem">+ Tambah item</button>
-        </fieldset>
+  </nav>
 
-        <fieldset>
-          <legend>Subtotal</legend>
-          <table>
-            <tbody>
-              <tr><th>Subtotal</th><td><input data-group="sub_total" data-field="subtotal_price" /></td></tr>
-              <tr><th>Pajak</th><td><input data-group="sub_total" data-field="tax_price" /></td></tr>
-              <tr><th>Servis</th><td><input data-group="sub_total" data-field="service_price" /></td></tr>
-            </tbody>
-          </table>
-        </fieldset>
+  <div class="page">
+    <h1>Detail job</h1>
+    <div id="banner"></div>
+    <div class="meta" id="meta"></div>
 
-        <fieldset>
-          <legend>Total</legend>
-          <table>
-            <tbody>
-              <tr><th>Total</th><td><input data-group="total" data-field="total_price" /></td></tr>
-              <tr><th>Bayar tunai</th><td><input data-group="total" data-field="cashprice" /></td></tr>
-              <tr><th>Kembalian</th><td><input data-group="total" data-field="changeprice" /></td></tr>
-            </tbody>
-          </table>
-        </fieldset>
+    <div class="columns">
+      <div class="col">
+        <h3>Dokumen asli</h3>
+        <img id="preview" alt="dokumen" />
+      </div>
+      <div class="col">
+        <h3>Hasil ekstraksi</h3>
+        <p class="legend">
+          <span><span class="dot conf-high"></span>confidence tinggi</span>
+          <span><span class="dot conf-mid"></span>sedang</span>
+          <span><span class="dot conf-low"></span>rendah -- cek manual</span>
+        </p>
+        <form id="correctionForm">
+          <fieldset>
+            <legend>Menu</legend>
+            <table>
+              <thead><tr><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Harga satuan</th><th></th></tr></thead>
+              <tbody id="menuBody"></tbody>
+            </table>
+            <button type="button" id="addItem">+ Tambah item</button>
+          </fieldset>
 
-        <button type="submit">Simpan koreksi</button>
-        <div id="status"></div>
-      </form>
+          <fieldset>
+            <legend>Subtotal</legend>
+            <table>
+              <tbody>
+                <tr><th>Subtotal</th><td><input data-group="sub_total" data-field="subtotal_price" /></td></tr>
+                <tr><th>Pajak</th><td><input data-group="sub_total" data-field="tax_price" /></td></tr>
+                <tr><th>Servis</th><td><input data-group="sub_total" data-field="service_price" /></td></tr>
+              </tbody>
+            </table>
+          </fieldset>
+
+          <fieldset>
+            <legend>Total</legend>
+            <table>
+              <tbody>
+                <tr><th>Total</th><td><input data-group="total" data-field="total_price" /></td></tr>
+                <tr><th>Bayar tunai</th><td><input data-group="total" data-field="cashprice" /></td></tr>
+                <tr><th>Kembalian</th><td><input data-group="total" data-field="changeprice" /></td></tr>
+              </tbody>
+            </table>
+          </fieldset>
+
+          <button type="submit">Simpan koreksi</button>
+          <div id="status"></div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -94,9 +95,9 @@
 
     function confidenceClass(score) {
       if (score == null) return '';
-      if (score < 0.6) return 'low';
-      if (score < 0.85) return 'mid';
-      return 'high';
+      if (score < 0.6) return 'conf-low';
+      if (score < 0.85) return 'conf-mid';
+      return 'conf-high';
     }
 
     function menuRow(item, index, scores) {
@@ -141,9 +142,9 @@
 
       const banner = document.getElementById('banner');
       if (job.reviewedAt) {
-        banner.innerHTML = `<div class="banner reviewed">Sudah direview pada ${new Date(job.reviewedAt).toLocaleString('id-ID')}.</div>`;
+        banner.innerHTML = `<div class="banner banner--success">Sudah direview pada ${new Date(job.reviewedAt).toLocaleString('id-ID')}.</div>`;
       } else if (job.needsReview) {
-        banner.innerHTML = `<div class="banner review">Confidence rendah -- perlu ditinjau manual sebelum dipakai.</div>`;
+        banner.innerHTML = `<div class="banner banner--warning">Confidence rendah -- perlu ditinjau manual sebelum dipakai.</div>`;
       }
 
       const data = job.correctedResult ?? job.result ?? { menu: [], sub_total: null, total: null };
