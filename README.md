@@ -10,6 +10,47 @@ tidak yakin.
 Nama **Rinci** dari kata "merinci" — memecah sesuatu jadi item-item
 detail.
 
+> Tidak ada demo publik permanen (butuh verifikasi kartu kredit di
+> setiap platform hosting yang dicoba, sengaja dihindari — lihat
+> `docs/adr/010-render-bukan-railway.md`). Jalan penuh lokal dalam
+> 5 menit lewat [Coba sendiri](#coba-sendiri) di bawah, atau lihat
+> semua halaman lewat screenshot di [Tampilan](#tampilan).
+
+## Tampilan
+
+Detail job (dua kolom, di atas) plus tiga halaman lain:
+
+<table>
+<tr>
+<td width="50%">
+
+**Landing** — hero 3D interaktif (ikut kursor), penjelasan alur kerja, angka eval nyata
+![Landing page](docs/screenshots/hero.jpg)
+
+</td>
+<td width="50%">
+
+**Review queue** — job dengan confidence rendah yang perlu ditinjau manual
+![Review queue](docs/screenshots/review-queue.jpg)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Dashboard eval** — histori tiap `npm run eval`, klik buat lihat akurasi per field
+![Dashboard eval](docs/screenshots/dashboard-eval.jpg)
+
+</td>
+<td width="50%">
+
+**API docs (Swagger)** — tiap endpoint terdokumentasi, bisa dicoba langsung dari browser
+![Swagger API docs](docs/screenshots/api-docs.jpg)
+
+</td>
+</tr>
+</table>
+
 ## Hasil eval (nyata, bukan estimasi)
 
 20 sampel dari split `test` CORD-v2, model `gemini-3.5-flash-lite`.
