@@ -22,6 +22,9 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Rinci jalan di http://localhost:${port}`);
   console.log(`API docs: http://localhost:${port}/api-docs`);
+  if (process.env.RUN_WORKER_IN_PROCESS === 'true') {
+    console.log('RUN_WORKER_IN_PROCESS=true -- worker (queue + cron cleanup) jalan di proses ini juga.');
+  }
 }
 
 bootstrap();
