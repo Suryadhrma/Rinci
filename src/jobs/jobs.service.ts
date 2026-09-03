@@ -77,4 +77,19 @@ export class JobsService {
       data: { status: JobStatus.FAILED, error },
     });
   }
+
+  list(options: { needsReview?: boolean; limit?: number } = {}): Promise<ExtractionJob[]> {
+    return this.prisma.extractionJob.findMany({
+      where: options.needsReview == null ? undefined : { needsReview: options.needsReview },
+      orderBy: { createdAt: 'desc' },
+      take: options.limit ?? 50,
+    });
+  }
+
+  submitCorrection(id: string, correctedResult: Prisma.InputJsonValue): Promise<ExtractionJob> {
+    return this.prisma.extractionJob.update({
+      where: { id },
+      data: { correctedResult, reviewedAt: new Date() },
+    });
+  }
 }

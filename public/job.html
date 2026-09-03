@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Rinci — detail job</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { margin-right: 1rem; }
+    .columns { display: flex; gap: 2rem; align-items: flex-start; }
+    .col { flex: 1; min-width: 0; }
+    .col img { max-width: 100%; border: 1px solid #ddd; }
+    .meta { color: #555; font-size: 0.9rem; margin: 0.5rem 0 1.5rem; }
+    .banner { padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+    .banner.review { background: #fff3cd; color: #664d03; }
+    .banner.reviewed { background: #d1e7dd; color: #0f5132; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    th, td { padding: 0.4rem; text-align: left; }
+    th { color: #555; font-weight: 600; font-size: 0.85rem; }
+    input { width: 100%; box-sizing: border-box; padding: 0.3rem; border: 1px solid #ccc; border-radius: 3px; }
+    input.high { border-color: #1a7f37; }
+    input.mid { border-color: #9a6700; background: #fffbea; }
+    input.low { border-color: #cf222e; background: #fff0f0; }
+    .legend { font-size: 0.8rem; color: #555; margin-bottom: 1rem; }
+    .legend span { margin-right: 1rem; }
+    fieldset { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 1rem; padding: 0.75rem 1rem; }
+    legend { font-weight: 600; padding: 0 0.4rem; }
+    button { padding: 0.5rem 1rem; cursor: pointer; }
+    #status { margin-top: 1rem; color: #555; }
+  </style>
+</head>
+<body>
+  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
+  <h1>Detail job</h1>
+  <div id="banner"></div>
+  <div class="meta" id="meta"></div>
+
+  <div class="columns">
+    <div class="col">
+      <h3>Dokumen asli</h3>
+      <img id="preview" alt="dokumen" />
+    </div>
+    <div class="col">
+      <h3>Hasil ekstraksi</h3>
+      <p class="legend">
+        <span style="color:#1a7f37">■ confidence tinggi</span>
+        <span style="color:#9a6700">■ sedang</span>
+        <span style="color:#cf222e">■ rendah -- cek manual</span>
+      </p>
+      <form id="correctionForm">
+        <fieldset>
+          <legend>Menu</legend>
+          <table>
+            <thead><tr><th>Nama</th><th>Jumlah</th><th>Harga</th><th>Harga satuan</th><th></th></tr></thead>
+            <tbody id="menuBody"></tbody>
+          </table>
+          <button type="button" id="addItem">+ Tambah item</button>
+        </fieldset>
+
+        <fieldset>
+          <legend>Subtotal</legend>
+          <table>
+            <tbody>
+              <tr><th>Subtotal</th><td><input data-group="sub_total" data-field="subtotal_price" /></td></tr>
+              <tr><th>Pajak</th><td><input data-group="sub_total" data-field="tax_price" /></td></tr>
+              <tr><th>Servis</th><td><input data-group="sub_total" data-field="service_price" /></td></tr>
+            </tbody>
+          </table>
+        </fieldset>
+
+        <fieldset>
+          <legend>Total</legend>
+          <table>
+            <tbody>
+              <tr><th>Total</th><td><input data-group="total" data-field="total_price" /></td></tr>
+              <tr><th>Bayar tunai</th><td><input data-group="total" data-field="cashprice" /></td></tr>
+              <tr><th>Kembalian</th><td><input data-group="total" data-field="changeprice" /></td></tr>
+            </tbody>
+          </table>
+        </fieldset>
+
+        <button type="submit">Simpan koreksi</button>
+        <div id="status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const jobId = new URLSearchParams(location.search).get('id');
+
+    function esc(v) {
+      return v == null ? '' : String(v).replace(/"/g, '&quot;');
+    }
+
+    function confidenceClass(score) {
+      if (score == null) return '';
+      if (score < 0.6) return 'low';
+      if (score < 0.85) return 'mid';
+      return 'high';
+    }
+
+    function menuRow(item, index, scores) {
+      const tr = document.createElement('tr');
+      const fields = ['nm', 'cnt', 'price', 'unitprice'];
+      tr.innerHTML = fields
+        .map((f) => {
+          const cls = confidenceClass(scores?.[`menu[${index}].${f}`]);
+          return `<td><input data-menu-field="${f}" class="${cls}" value="${esc(item[f])}" /></td>`;
+        })
+        .join('') + '<td><button type="button" class="removeItem">Hapus</button></td>';
+      return tr;
+    }
+
+    function fillGroup(group, data, scores) {
+      document.querySelectorAll(`input[data-group="${group}"]`).forEach((input) => {
+        const field = input.dataset.field;
+        input.value = esc(data?.[field]);
+        input.className = confidenceClass(scores?.[`${group}.${field}`]);
+      });
+    }
+
+    async function load() {
+      if (!jobId) {
+        document.getElementById('status').textContent = 'Tidak ada job id di URL.';
+        return;
+      }
+
+      const res = await fetch(`/jobs/${jobId}`);
+      if (!res.ok) {
+        document.getElementById('status').textContent = `Job tidak ditemukan (HTTP ${res.status})`;
+        return;
+      }
+      const job = await res.json();
+
+      document.getElementById('preview').src = `/jobs/${jobId}/image`;
+      document.getElementById('meta').textContent =
+        `Status: ${job.status} | Model: ${job.modelName ?? '-'} | ` +
+        `Eskalasi: ${job.escalated ? 'ya' : 'tidak'} | Repair prompt: ${job.repaired ? 'ya' : 'tidak'} | ` +
+        `Biaya: ${job.usage?.costUsd != null ? '$' + job.usage.costUsd.toFixed(6) : '-'} | ` +
+        `Durasi: ${job.usage?.durationMs ?? '-'}ms`;
+
+      const banner = document.getElementById('banner');
+      if (job.reviewedAt) {
+        banner.innerHTML = `<div class="banner reviewed">Sudah direview pada ${new Date(job.reviewedAt).toLocaleString('id-ID')}.</div>`;
+      } else if (job.needsReview) {
+        banner.innerHTML = `<div class="banner review">Confidence rendah -- perlu ditinjau manual sebelum dipakai.</div>`;
+      }
+
+      const data = job.correctedResult ?? job.result ?? { menu: [], sub_total: null, total: null };
+      const scores = job.confidence?.fieldScores ?? {};
+
+      const menuBody = document.getElementById('menuBody');
+      menuBody.innerHTML = '';
+      (data.menu ?? []).forEach((item, i) => menuBody.appendChild(menuRow(item, i, scores)));
+
+      fillGroup('sub_total', data.sub_total, scores);
+      fillGroup('total', data.total, scores);
+    }
+
+    document.getElementById('addItem').addEventListener('click', () => {
+      document.getElementById('menuBody').appendChild(menuRow({}, -1, {}));
+    });
+
+    document.getElementById('menuBody').addEventListener('click', (e) => {
+      if (e.target.classList.contains('removeItem')) {
+        e.target.closest('tr').remove();
+      }
+    });
+
+    function collectGroup(group) {
+      const result = {};
+      let hasValue = false;
+      document.querySelectorAll(`input[data-group="${group}"]`).forEach((input) => {
+        const value = input.value.trim();
+        result[input.dataset.field] = value === '' ? null : value;
+        if (value !== '') hasValue = true;
+      });
+      return hasValue ? result : null;
+    }
+
+    document.getElementById('correctionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const statusEl = document.getElementById('status');
+
+      const menu = [...document.querySelectorAll('#menuBody tr')].map((tr) => {
+        const item = {};
+        tr.querySelectorAll('input[data-menu-field]').forEach((input) => {
+          const value = input.value.trim();
+          item[input.dataset.menuField] = value === '' ? null : value;
+        });
+        return item;
+      });
+
+      const body = { menu, sub_total: collectGroup('sub_total'), total: collectGroup('total') };
+
+      statusEl.textContent = 'Menyimpan...';
+      try {
+        const res = await fetch(`/jobs/${jobId}/correction`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const responseBody = await res.json();
+
+        if (!res.ok) {
+          statusEl.textContent = `Gagal: ${responseBody.message ?? res.status}`;
+          return;
+        }
+        statusEl.textContent = 'Koreksi tersimpan, ditambahkan ke dataset eval.';
+        load();
+      } catch (err) {
+        statusEl.textContent = `Error: ${err}`;
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>

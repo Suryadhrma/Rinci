@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ExtractionModule } from './extraction/extraction.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { JobsModule } from './jobs/jobs.module';
+import { EvalDashboardModule } from './eval-dashboard/eval-dashboard.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { JobsModule } from './jobs/jobs.module';
     PrismaModule,
     JobsModule,
     ExtractionModule,
+    EvalDashboardModule,
   ],
 })
 export class AppModule {}

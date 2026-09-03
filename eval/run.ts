@@ -174,7 +174,9 @@ async function main(): Promise<void> {
   console.log(`\nHasil run tersimpan di ${runPath}`);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main()
+  .then(() => process.exit(0)) // koneksi Redis dari QueueModule tidak nutup sendiri, proses jadi nggantung tanpa ini
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Rinci — dashboard eval</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { margin-right: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; vertical-align: top; }
+    th { color: #555; font-weight: 600; }
+    .bar-track { background: #eee; border-radius: 3px; height: 10px; width: 100px; overflow: hidden; }
+    .bar-fill { background: #1a7f37; height: 100%; }
+    .run-row { cursor: pointer; }
+    .run-row:hover { background: #fafafa; }
+    .detail { display: none; background: #f9f9f9; }
+    .detail.open { display: table-row; }
+    .field-table { margin: 0; }
+    .field-table th, .field-table td { padding: 0.25rem 0.5rem; border: none; font-size: 0.85rem; }
+    .empty { color: #888; }
+  </style>
+</head>
+<body>
+  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
+  <h1>Dashboard eval</h1>
+  <p class="empty">Baca langsung dari <code>eval/runs/*.json</code> -- klik satu run buat lihat akurasi per field.</p>
+
+  <table>
+    <thead>
+      <tr><th>Waktu</th><th>Split</th><th>N</th><th>Model</th><th>Akurasi</th><th>Biaya/dok</th></tr>
+    </thead>
+    <tbody id="runsBody"></tbody>
+  </table>
+  <p id="emptyMsg" class="empty" style="display:none">Belum ada hasil eval. Jalankan <code>npm run eval</code>.</p>
+
+  <script>
+    function esc(v) {
+      return v == null ? '' : String(v);
+    }
+
+    function renderFieldTable(fieldAccuracy) {
+      if (!fieldAccuracy?.length) return '<p class="empty">Tidak ada rincian per field.</p>';
+      const rows = fieldAccuracy
+        .map((f) => {
+          const pct = f.total ? ((f.matched / f.total) * 100).toFixed(1) : '0.0';
+          return `<tr><td>${f.field}</td><td>${f.matched}/${f.total}</td><td>${pct}%</td></tr>`;
+        })
+        .join('');
+      return `<table class="field-table"><thead><tr><th>Field</th><th>Match</th><th>%</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    async function loadRuns() {
+      const res = await fetch('/eval/runs');
+      const runs = await res.json();
+
+      const tbody = document.getElementById('runsBody');
+      tbody.innerHTML = '';
+      document.getElementById('emptyMsg').style.display = runs.length ? 'none' : 'block';
+
+      // Terbaru dulu.
+      runs.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+
+      runs.forEach((run, i) => {
+        const modelLabel = run.models ? Object.keys(run.models).join(', ') : run.model ?? '-';
+        const avgCost = run.cost?.avgCostUsdPerDoc;
+        const costLabel = avgCost != null ? `$${avgCost.toFixed(6)}` : 'n/a (run lama)';
+        const pct = run.overall?.pct ?? 0;
+
+        const tr = document.createElement('tr');
+        tr.className = 'run-row';
+        tr.innerHTML = `
+          <td>${new Date(run.timestamp).toLocaleString('id-ID')}</td>
+          <td>${esc(run.split)}</td>
+          <td>${esc(run.sampleCount)}</td>
+          <td>${esc(modelLabel)}</td>
+          <td>
+            ${pct.toFixed(1)}%
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </td>
+          <td>${costLabel}</td>
+        `;
+
+        const detailRow = document.createElement('tr');
+        detailRow.className = 'detail';
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.innerHTML = renderFieldTable(run.fieldAccuracy);
+        detailRow.appendChild(td);
+
+        tr.addEventListener('click', () => detailRow.classList.toggle('open'));
+
+        tbody.appendChild(tr);
+        tbody.appendChild(detailRow);
+      });
+    }
+
+    loadRuns();
+  </script>
+</body>
+</html>

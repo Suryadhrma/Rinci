@@ -15,31 +15,37 @@ enum JobStatus {
 }
 
 model ExtractionJob {
-  id           String    @id @default(uuid())
-  status       JobStatus @default(QUEUED)
-  filename     String
-  storagePath  String
-  mimeType     String
+  id              String    @id @default(uuid())
+  status          JobStatus @default(QUEUED)
+  filename        String
+  storagePath     String
+  mimeType        String
   // sha256 isi file -- idempotency key: upload dengan isi yang sama
   // (mis. double-submit) dipetakan ke job yang sama, tidak diproses ulang.
-  contentHash  String
-  result       Json?
-  confidence   Json?
-  needsReview  Boolean   @default(false)
-  error        String?
-  modelName    String?
+  contentHash     String
+  result          Json?
+  confidence      Json?
+  needsReview     Boolean   @default(false)
+  error           String?
+  modelName       String?
   // Biaya & penggunaan model (Tahap 5) -- dijumlah dari semua panggilan
   // model beneran buat job ini (termasuk repair prompt & eskalasi kalau
   // kejadian). costUsd tarif berbayar resmi, bukan tagihan riil (project
   // ini jalan di free tier) -- lihat src/extraction/pricing.ts.
-  inputTokens  Int?
-  outputTokens Int?
-  costUsd      Float?
-  durationMs   Int?
-  escalated    Boolean   @default(false)
-  repaired     Boolean   @default(false)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  inputTokens     Int?
+  outputTokens    Int?
+  costUsd         Float?
+  durationMs      Int?
+  escalated       Boolean   @default(false)
+  repaired        Boolean   @default(false)
+  // Review queue (Tahap 6) -- correctedResult diisi kalau manusia sudah
+  // mengoreksi hasil model lewat form review; reviewedAt nandain kapan.
+  // "result" (hasil model asli) SENGAJA tidak ditimpa, biar tetap bisa
+  // dibandingkan model-vs-koreksi-manusia nanti.
+  correctedResult Json?
+  reviewedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([contentHash])
 }

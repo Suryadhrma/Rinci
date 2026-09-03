@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-09-02T07-04-55-953Z",
+  "models": {
+    "gemini-3.5-flash-lite": 1
+  },
+  "promptVersion": "v1",
+  "promptHash": "e59c83bc",
+  "split": "corrections",
+  "sampleCount": 1,
+  "fieldAccuracy": [
+    {
+      "field": "menu[].cnt",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "menu[].nm",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "menu[].price",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "menu[].unitprice",
+      "matched": 0,
+      "total": 1
+    },
+    {
+      "field": "sub_total.subtotal_price",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "sub_total.tax_price",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "total.cashprice",
+      "matched": 1,
+      "total": 1
+    },
+    {
+      "field": "total.total_price",
+      "matched": 1,
+      "total": 1
+    }
+  ],
+  "overall": {
+    "matched": 7,
+    "total": 8,
+    "pct": 87.5
+  },
+  "cost": {
+    "totalCostUsd": 0.000835,
+    "avgCostUsdPerDoc": 0.000835,
+    "escalatedCount": 0,
+    "sampleCount": 1
+  },
+  "perSample": [
+    {
+      "filename": "15fe7901-dcf5-4257-8973-13f6202eb6a7.jpg",
+      "mismatches": [
+        {
+          "field": "menu[0].unitprice",
+          "expected": "28.182",
+          "actual": null,
+          "match": false
+        }
+      ],
+      "modelName": "gemini-3.5-flash-lite",
+      "escalated": false,
+      "costUsd": 0.000835
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Rinci — review queue</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    nav { margin-bottom: 1.5rem; }
+    nav a { margin-right: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ddd; }
+    th { color: #555; font-weight: 600; }
+    .high { color: #1a7f37; }
+    .mid { color: #9a6700; }
+    .low { color: #cf222e; font-weight: 600; }
+    .empty { color: #888; padding: 1rem 0; }
+    label { display: inline-flex; align-items: center; gap: 0.4rem; }
+  </style>
+</head>
+<body>
+  <nav><a href="/index.html">Upload</a> | <a href="/review.html">Review queue</a> | <a href="/dashboard.html">Dashboard eval</a></nav>
+  <h1>Review queue</h1>
+  <label><input type="checkbox" id="onlyNeedsReview" checked /> Cuma tampilkan yang perlu direview</label>
+
+  <table>
+    <thead>
+      <tr><th>File</th><th>Status</th><th>Confidence</th><th>Model</th><th>Biaya</th><th>Dibuat</th><th></th></tr>
+    </thead>
+    <tbody id="jobsBody"></tbody>
+  </table>
+  <p id="emptyMsg" class="empty" style="display:none">Tidak ada job.</p>
+
+  <script>
+    function confidenceClass(score) {
+      if (score == null) return '';
+      if (score < 0.6) return 'low';
+      if (score < 0.85) return 'mid';
+      return 'high';
+    }
+
+    async function loadJobs() {
+      const onlyNeedsReview = document.getElementById('onlyNeedsReview').checked;
+      const url = onlyNeedsReview ? '/jobs?needsReview=true&limit=50' : '/jobs?limit=50';
+      const res = await fetch(url);
+      const jobs = await res.json();
+
+      const tbody = document.getElementById('jobsBody');
+      tbody.innerHTML = '';
+      document.getElementById('emptyMsg').style.display = jobs.length ? 'none' : 'block';
+
+      for (const job of jobs) {
+        const tr = document.createElement('tr');
+        const pct = job.confidenceScore != null ? `${(job.confidenceScore * 100).toFixed(0)}%` : '-';
+        const cost = job.costUsd != null ? `$${job.costUsd.toFixed(6)}` : '-';
+        const status = job.status + (job.reviewed ? ' (sudah direview)' : '');
+
+        tr.innerHTML = `
+          <td>${job.filename}</td>
+          <td>${status}</td>
+          <td class="${confidenceClass(job.confidenceScore)}">${pct}</td>
+          <td>${job.modelName ?? '-'}</td>
+          <td>${cost}</td>
+          <td>${new Date(job.createdAt).toLocaleString('id-ID')}</td>
+          <td><a href="/job.html?id=${job.id}">Buka</a></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    document.getElementById('onlyNeedsReview').addEventListener('change', loadJobs);
+    loadJobs();
+  </script>
+</body>
+</html>
